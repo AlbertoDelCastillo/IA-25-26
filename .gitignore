@@ -1,7 +1,10 @@
-# Ignore Visual Studio Code specific files
+Ignore Visual Studio Code specific files
 .vscode/
+
 # Ignore build directories
 build/
+Build/
+BUILD/
 cmake-build-*/
 
 # Ignore outputs files
@@ -13,16 +16,30 @@ outputs*/
 *.lo
 *.la
 
-# Ignore compiled dynamic libraries
+# Ignore compiled libraries
+*.lib
+*.a
+*.la
+*.lo
 *.dll
 *.so
 *.dylib
-
-# Ignore compiled static libraries
-*.lib
-*.a
 
 # Ignore executables
 *.exe
 *.out
 *.app
+
+# Ignore dependency files
+*.d
+
+# Ignore core dumps
+core
+*.core
+
+# Ignore other temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+*.swo
