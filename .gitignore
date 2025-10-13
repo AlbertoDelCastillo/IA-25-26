@@ -1,0 +1,41 @@
+# Ignore Visual Studio Code specific files
+.vscode/
+
+# Ignore build directories
+build/
+Build/
+BUILD/
+
+# Ignore C++ compiled object files
+*.o
+*.obj
+*.lo
+*.la
+
+# Ignore C++ compiled libraries
+*.lib
+*.a
+*.la
+*.lo
+*.dll
+*.so
+*.dylib
+
+# Ignore C++ compiled executables
+*.exe
+*.out
+*.app
+
+# Ignore dependency files
+*.d
+
+# Ignore core dumps
+core
+*.core
+
+# Ignore other temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+*.swo
