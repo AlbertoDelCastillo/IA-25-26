@@ -277,3 +277,231 @@ inspeccionado varios nodos
 //     // No se encontró camino
 //     return result;
 // }
+
+// MODI 1 //////////////////////////////////////////////////////
+
+SearchResult Grafo::BFSMultiarranque(int nodo_origen, int nodo_destino) {
+  SearchResult r;
+  if (nodo_origen < 0 || nodo_origen >= numero_nodos_ ||
+      nodo_destino < 0 || nodo_destino >= numero_nodos_) {
+    return r;
+  }
+
+  // Si el origen y destino son el mismo nodo
+  if (nodo_origen == nodo_destino) {
+    r.path = {nodo_origen};
+    r.cost = 0.0;
+    return r;
+  }
+
+  // Máximo de ejecuciones permitidas
+  const int max_ejecuciones = 10;
+  int ejecuciones_realizadas = 0;
+
+  // Vectores acumulados para el log
+  std::vector<int> generados;
+  std::vector<int> inspeccionados;
+
+  // Iteración 0: antes de comenzar
+  {
+    IterationLog l;
+    l.generated_accumulated = generados;
+    l.inspected_accumulated = inspeccionados;
+    r.logs.push_back(l);
+  }
+
+  // Búsqueda multiarranque
+  while (ejecuciones_realizadas < max_ejecuciones) {
+    std::vector<bool> visitado(numero_nodos_, false);
+    std::vector<int> padre(numero_nodos_, -1);
+    std::queue<int> q;
+
+    // En la primera ejecución, comenzamos desde el nodo origen
+    if (ejecuciones_realizadas == 0) {
+      q.push(nodo_origen);
+      visitado[nodo_origen] = true;
+      generados.push_back(nodo_origen);
+      inspeccionados.push_back(nodo_origen);
+      
+      // Snapshot tras inspeccionar nodo_origen
+      {
+        IterationLog l;
+        l.generated_accumulated = generados;
+        l.inspected_accumulated = inspeccionados;
+        r.logs.push_back(l);
+      }
+    } 
+    else {
+      // En ejecuciones posteriores, seleccionamos un hijo aleatorio del nodo origen
+      auto vecinos_origen = GetVecinos(nodo_origen);
+      if (vecinos_origen.empty()) {
+        break; // No hay vecinos, no podemos continuar
+      }
+
+      // Seleccionar un vecino aleatorio
+      int indice_aleatorio = rand() % vecinos_origen.size();
+      int hijo_seleccionado = vecinos_origen[indice_aleatorio];
+
+      // Iniciar BFS desde el hijo seleccionado
+      q.push(hijo_seleccionado);
+      visitado[hijo_seleccionado] = true;
+      padre[hijo_seleccionado] = nodo_origen; // Establecer el origen como padre
+      generados.push_back(hijo_seleccionado);
+    }
+
+    // BFS desde el nodo actual (origen o hijo aleatorio)
+    while (!q.empty()) {
+      const int u = q.front(); 
+      q.pop();
+
+      // Solo agregar a inspeccionados si no es el nodo origen (ya fue inspeccionado)
+      if (u != nodo_origen || ejecuciones_realizadas > 0) {
+        inspeccionados.push_back(u);
+      }
+
+      // Generar vecinos de 'u' y encolarlos si no estaban visitados
+      for (int v : GetVecinos(u)) {
+        if (!visitado[v]) {
+          visitado[v] = true;
+          padre[v] = u;
+          q.push(v);
+          generados.push_back(v);
+        }
+      }
+
+      // Snapshot tras inspeccionar 'u'
+      {
+        IterationLog l;
+        l.generated_accumulated = generados;
+        l.inspected_accumulated = inspeccionados;
+        r.logs.push_back(l);
+      }
+
+      // Si encontramos el destino, reconstruir camino y retornar
+      if (u == nodo_destino) {
+        std::vector<int> path;
+        for (int v = nodo_destino; v != -1; v = padre[v]) {
+          path.push_back(v);
+        }
+        std::reverse(path.begin(), path.end());
+        r.path = path;
+
+        // Calcular coste
+        double c = 0.0;
+        for (size_t i = 1; i < r.path.size(); ++i) {
+          c += GetPeso(r.path[i-1], r.path[i]);
+        }
+        r.cost = c;
+        return r;
+      }
+    }
+
+    ejecuciones_realizadas++;
+    
+    // Si estamos en la primera ejecución y no encontramos el destino,
+    // prepararnos para la siguiente ejecución con un hijo aleatorio
+    if (ejecuciones_realizadas == 0) {
+      // Verificar si el nodo origen tiene vecinos para continuar
+      auto vecinos_origen = GetVecinos(nodo_origen);
+      if (vecinos_origen.empty()) {
+        break; // No hay vecinos, no podemos continuar
+      }
+    }
+  }
+
+  // Si llegamos aquí, no se encontró camino después de max_ejecuciones intentos
+  return r;
+}
+
+///////////////////////////////////////////////////////////////
+
+////// MODI aleatorio //////////////////////////////////
+
+Modificar la búsqueda en amplitud para que, en cada iteración, inspeccione uno de los nodos de la frontera seleccionado al azar.
+La búsqueda finalizará cuando el nodo a inspeccionar coincida con la ciudad de destino. En la primera iteración se inspeccionará el único nodo disponible.
+
+SearchResult Grafo::BFS(int nodo_origen, int nodo_destino) {
+    SearchResult r;
+    if (nodo_origen < 0 || nodo_origen >= numero_nodos_ ||
+        nodo_destino < 0 || nodo_destino >= numero_nodos_) {
+        return r;
+    }
+
+    std::vector<bool> visitado(numero_nodos_, false);
+    std::vector<int> padre(numero_nodos_, -1);
+    std::vector<int> frontera;  // Lista de nodos en la frontera
+    
+    // Vectores acumulados para el log
+    std::vector<int> generados;
+    std::vector<int> inspeccionados;
+
+    // Inicialización
+    frontera.push_back(nodo_origen);
+    visitado[nodo_origen] = true;
+    generados.push_back(nodo_origen);
+
+    // Iteración 1: antes de inspeccionar a nadie
+    {
+        IterationLog l;
+        l.generated_accumulated = generados;
+        l.inspected_accumulated = inspeccionados;
+        r.logs.push_back(l);
+    }
+
+    // Semilla para números aleatorios
+    std::srand(std::time(0));
+
+    // Bucle principal
+    while (!frontera.empty()) {
+        // Seleccionar un nodo aleatorio de la frontera
+        int indice_aleatorio = std::rand() % frontera.size();
+        int u = frontera[indice_aleatorio];
+        
+        // Eliminar el nodo seleccionado de la frontera
+        frontera.erase(frontera.begin() + indice_aleatorio);
+
+        // INSPECCIONAR SOLO 'u' EN ESTA ITERACIÓN
+        inspeccionados.push_back(u);
+
+        // Generar vecinos de 'u' y agregarlos a la frontera si no estaban visitados
+        for (int v : GetVecinos(u)) {
+            if (!visitado[v]) {
+                visitado[v] = true;
+                padre[v] = u;
+                frontera.push_back(v);
+                generados.push_back(v);
+            }
+        }
+
+        // Snapshot tras inspeccionar 'u' (acumulados)
+        {
+            IterationLog l;
+            l.generated_accumulated = generados;
+            l.inspected_accumulated = inspeccionados;
+            r.logs.push_back(l);
+        }
+
+        // Condición de terminación: si encontramos el destino
+        if (u == nodo_destino) break;
+    }
+
+    // Reconstrucción de camino y coste (si se llegó al destino)
+    if (visitado[nodo_destino]) {
+        std::vector<int> path;
+        for (int v = nodo_destino; v != -1; v = padre[v]) {
+            path.push_back(v);
+        }
+        std::reverse(path.begin(), path.end());
+        r.path = path;
+
+        double c = 0.0;
+        for (size_t i = 1; i < r.path.size(); ++i) {
+            c += GetPeso(r.path[i-1], r.path[i]);
+        }
+        r.cost = c;
+    }
+
+    return r;
+}
+
+//////////////////////////////////////////////////
