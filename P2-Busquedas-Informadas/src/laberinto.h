@@ -37,6 +37,8 @@ class Laberinto {
   void ImprimirLaberinto() const;
   void CambiarStart(const size_t, const size_t);
   void CambiarExit(const size_t, const size_t);
+  std::vector<std::pair<size_t, size_t>> GetVecinosCasilla(const size_t, const size_t) const;
+  size_t MoveCost(const size_t, const size_t) const;
   // Google Style getters
   int filas() const noexcept { return filas_; }
   int columnas() const noexcept {return columnas_; }
@@ -46,7 +48,7 @@ class Laberinto {
   std::vector<std::vector<Casilla>> matriz_casillas_{};
   std::pair<size_t, size_t> coordenadas_start_{};
   std::pair<size_t, size_t> coordenadas_exit_{};
-  // Metodo Auxiliares
+  // Metodo Auxiliares privados
   bool EsCoordenadaValida(size_t fila, size_t columna) const noexcept;
   bool EsBorde(size_t fila, size_t columna) const noexcept;
   bool EsSalidaValida(size_t fila, size_t columna) const noexcept; 

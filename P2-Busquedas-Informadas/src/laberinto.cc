@@ -105,3 +105,11 @@ bool Laberinto::EsEntradaValida(size_t fila, size_t columna) const noexcept {
   // if (matriz_casillas_[fila][columna].tipo() == Tipo_Casilla::Obstaculo) return false;
   return true;
 }
+
+std::vector<std::pair<size_t, size_t>> Laberinto::GetVecinosCasilla(const size_t, const size_t) const {
+
+}
+
+size_t Laberinto::MoveCost(const size_t, const size_t) const {
+
+}

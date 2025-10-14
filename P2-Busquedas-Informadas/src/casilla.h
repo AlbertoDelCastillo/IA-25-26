@@ -19,6 +19,8 @@
 #include <iostream>
 #include <cstdint>
 
+constexpr size_t INFI{4000000}; 
+
 enum class Tipo_Casilla : uint8_t {
   Libre = 0,
   Obstaculo = 1,
@@ -44,9 +46,13 @@ class Casilla {
   Tipo_Casilla tipo() const noexcept { return tipo_; }
   // Setters
   void setTipoCasilla(const Tipo_Casilla& tipo) { tipo_ = tipo; }
+  void setCosteFn(const size_t coste) noexcept { f_n_ = coste; }
+  void setCosteGn(const size_t coste) noexcept { g_n_ = coste; }
+  void setCosteHn(const size_t coste) noexcept { h_n_ = coste; }
  private:
   Tipo_Casilla tipo_{};
   bool paso_agente_{};
+  size_t f_n_{INFI}, g_n_{0}, h_n_{INFI}; // Costes A* 
 };
 
 #endif
