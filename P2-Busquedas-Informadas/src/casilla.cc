@@ -13,8 +13,6 @@
   */
 
 #include "casilla.h"
-#include <iostream>
-#include <cstdint>
 #include <stdexcept>
 
 Tipo_Casilla FromInt(const int valor){

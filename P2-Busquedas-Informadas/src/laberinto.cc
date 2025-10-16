@@ -108,13 +108,97 @@ bool Laberinto::EsEntradaValida(size_t fila, size_t columna) const noexcept {
   return true;
 }
 
-// std::vector<std::pair<size_t, size_t>> Laberinto::GetVecinosCasilla(const size_t, const size_t) const {
+bool Laberinto::EsMovimientoDiagonal(size_t fila_actual, size_t col_actual,
+                                    size_t fila_vecina, size_t col_vecina) const {
+  int diff_fila = std::abs(static_cast<int>(fila_vecina) - static_cast<int>(fila_actual));
+  int diff_col = std::abs(static_cast<int>(col_vecina) - static_cast<int>(col_actual));
+  return (diff_fila == 1 && diff_col == 1);
+}
 
-// }
+bool Laberinto::EsMovimientoHorizontalOVertical(size_t fila_actual, size_t col_actual,
+                                               size_t fila_vecina, size_t col_vecina) const {
+  int diff_fila = std::abs(static_cast<int>(fila_vecina) - static_cast<int>(fila_actual));
+  int diff_col = std::abs(static_cast<int>(col_vecina) - static_cast<int>(col_actual));
+  return (diff_fila == 1 && diff_col == 0) || (diff_fila == 0 && diff_col == 1);
+}
 
-// size_t Laberinto::MoveCost(const size_t, const size_t) const {
+bool Laberinto::EsMovimientoValido(size_t fila_actual, size_t col_actual, 
+                                  size_t fila_vecina, size_t col_vecina) const {
+  // Verificar que las coordenadas son válidas
+  if (!EsCoordenadaValida(fila_vecina, col_vecina)) {
+    return false;
+  }
+  
+  // Verificar que no es la misma casilla
+  if (fila_actual == fila_vecina && col_actual == col_vecina) {
+    return false;
+  }
+  
+  // Verificar que la casilla vecina no es un obstáculo
+  if (matriz_casillas_[fila_vecina][col_vecina].tipo() == Tipo_Casilla::Obstaculo) {
+    return false;
+  }
+  
+  // Verificar que el movimiento es adyacente (incluyendo diagonales)
+  int diff_fila = std::abs(static_cast<int>(fila_vecina) - static_cast<int>(fila_actual));
+  int diff_col = std::abs(static_cast<int>(col_vecina) - static_cast<int>(col_actual));
+  
+  if (diff_fila > 1 || diff_col > 1) {
+    return false; // Movimiento demasiado lejano
+  }
+  
+  // Para movimientos diagonales, verificar que no hay obstáculos en las celdas adyacentes
+  if (diff_fila == 1 && diff_col == 1) {
+    // Verificar que ambas celdas adyacentes no son obstáculos
+    bool obstaculo_horizontal = matriz_casillas_[fila_actual][col_vecina].tipo() == Tipo_Casilla::Obstaculo;
+    bool obstaculo_vertical = matriz_casillas_[fila_vecina][col_actual].tipo() == Tipo_Casilla::Obstaculo;
+    
+    if (obstaculo_horizontal && obstaculo_vertical) {
+      return false; // No se puede mover en diagonal si ambas adyacentes son obstáculos
+    }
+  }
+  
+  return true;
+}
 
-// }
+std::vector<std::pair<size_t, size_t>> Laberinto::GetVecinosCasilla(const size_t fila, const size_t columna) const {
+  std::vector<std::pair<size_t, size_t>> vecinos;
+  
+  // Definir todas las direcciones posibles (8-vecindad)
+  const std::vector<std::pair<int, int>> direcciones = {
+    {-1, -1}, {-1, 0}, {-1, 1},  // Superior izquierda, superior, superior derecha
+    {0, -1},           {0, 1},   // Izquierda, derecha
+    {1, -1},  {1, 0},  {1, 1}    // Inferior izquierda, inferior, inferior derecha
+  };
+  
+  for (const auto& dir : direcciones) {
+    size_t nueva_fila = fila + dir.first;
+    size_t nueva_columna = columna + dir.second;
+    
+    if (EsMovimientoValido(fila, columna, nueva_fila, nueva_columna)) {
+      vecinos.emplace_back(nueva_fila, nueva_columna);
+    }
+  }
+  
+  return vecinos;
+}
+
+double Laberinto::MoveCost(const size_t fila_actual, const size_t col_actual, 
+                          const size_t fila_vecina, const size_t col_vecina) const {
+  // Verificar que el movimiento es válido
+  if (!EsMovimientoValido(fila_actual, col_actual, fila_vecina, col_vecina)) {
+    return std::numeric_limits<double>::infinity(); // Costo infinito para movimientos inválidos
+  }
+  
+  // Costo base según el tipo de movimiento
+  if (EsMovimientoDiagonal(fila_actual, col_actual, fila_vecina, col_vecina)) {
+    return 7.0; // Costo diagonal ≈ 1.414
+  } else if (EsMovimientoHorizontalOVertical(fila_actual, col_actual, fila_vecina, col_vecina)) {
+    return 5.0; // Costo horizontal/vertical
+  }
+  // En caso de algún movimiento no contemplado
+  return std::numeric_limits<double>::infinity();
+}
 
 void Laberinto::ActualizarDinamismo() {
   std::random_device rd;
@@ -135,11 +219,11 @@ void Laberinto::MutarCeldas(const double pin, const double pout, std::mt19937& r
       // std::cerr << U << std::endl; // DEBUG
       auto& casilla = matriz_casillas_[i][j];
       if (casilla.tipo() == Tipo_Casilla::Libre) {
-        if (!(U < (1.0 - pin))) {
+        if (U >= (1.0 - pin)) {
           casilla.setTipoCasilla(Tipo_Casilla::Obstaculo);
         }
       } else if (casilla.tipo() == Tipo_Casilla::Obstaculo) {
-        if (!(U < (1.0 - pout))) {
+        if (U >= (1.0 - pout)) {
           casilla.setTipoCasilla(Tipo_Casilla::Libre);
         }
       }
@@ -212,4 +296,11 @@ std::ostream& operator<<(std::ostream& os, const Laberinto& laberinto) {
   os << "Porcentaje casillas ocupadas: " << laberinto.ContarPorcentajeBloqueadas(); 
   os << std::endl;
   return os;
+}
+
+double Laberinto::Heuristica(const size_t fila_actual, const size_t col_actual) const {
+  constexpr double W = 3.0;
+  int diff_fila = std::abs(static_cast<int>(coordenadas_exit_.first) - static_cast<int>(fila_actual));
+  int diff_col = std::abs(static_cast<int>(coordenadas_exit_.second) - static_cast<int>(col_actual));
+  return (diff_fila + diff_col) * W;
 }

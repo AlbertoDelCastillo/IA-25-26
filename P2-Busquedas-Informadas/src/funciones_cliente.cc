@@ -82,7 +82,6 @@ void Usage(void) {
 
 void Menu(Laberinto& laberinto, const std::string& output_file) {
   int opcion = 0;
-  std::cout << "DEBUG: Archivo de salida = '" << output_file << "'" << std::endl; 
   do {
     std::cout << "\n========== MENÚ DE PRUEBAS ==========\n";
     std::cout << "1. Imprimir laberinto\n";

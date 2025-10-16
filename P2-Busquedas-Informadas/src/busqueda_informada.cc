@@ -11,3 +11,9 @@
   * @brief 
   * @version 1.0
   */
+
+#include "busqueda_informada.h"
+
+void BusquedaInformada::BusquedaAStar() const {
+  
+}

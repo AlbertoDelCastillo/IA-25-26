@@ -19,7 +19,16 @@
 #include <fstream>
 #include <set>
 #include <queue>
+#include <utility>
 #include "laberinto.h"
+
+typedef struct nodo {
+  std::pair<size_t, size_t> posicion{};
+  double g_cost{}, h_cost{}, f_cost{};
+  std::pair<int, int> padre{-1, -1};
+  nodo(std::pair<size_t, size_t> pos, double g, double h, std::pair<int, int> p) 
+  : posicion{pos}, g_cost{g}, h_cost{h}, f_cost{g + h}, padre(p) {}
+} nodo;
 
 /**
  * 
@@ -34,6 +43,9 @@ class BusquedaInformada {
   
  private:
   Laberinto laberinto_{};
+  std::vector<std::pair<size_t, size_t>> camino_encontrado_{};
+  size_t nodo_generados_{};
+  size_t nodo_inspeccionados_{};
 };
 
 #endif

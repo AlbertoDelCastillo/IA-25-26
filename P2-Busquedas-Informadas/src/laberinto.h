@@ -40,11 +40,15 @@ class Laberinto {
   void CambiarExit(const size_t, const size_t);
   void ActualizarDinamismo();
   // Metodos de utilidad para A*
-  // std::vector<std::pair<size_t, size_t>> GetVecinosCasilla(const size_t, const size_t) const;
-  // size_t MoveCost(const size_t, const size_t) const;
+  std::vector<std::pair<size_t, size_t>> GetVecinosCasilla(const size_t, const size_t) const;
+  double MoveCost(const size_t, const size_t, const size_t, const size_t) const;
+  double Heuristica(const size_t, const size_t) const;
   // Google Style getters
   int filas() const noexcept { return filas_; }
   int columnas() const noexcept {return columnas_; }
+  const Casilla& getCasilla(const size_t fila, const size_t columna) const { return matriz_casillas_[fila][columna]; }
+  std::pair<size_t, size_t> coordenadas_start() const noexcept {   return coordenadas_start_; }
+  std::pair<size_t, size_t> coordenadas_exit() const noexcept {  return coordenadas_exit_; }
   // Sobrecarga operadores
   friend std::ostream& operator<<(std::ostream&, const Laberinto&);
  private:
@@ -64,6 +68,13 @@ class Laberinto {
   std::vector<std::pair<size_t, size_t>> ObtenerCasillasBloqueadas() const;
   size_t ContarPorcentajeBloqueadas() const noexcept;
   size_t ContarObstaculos() const noexcept;
+  // Métodos auxiliares para movimiento y vecinos
+  bool EsMovimientoValido(size_t fila_actual, size_t col_actual, 
+                         size_t fila_vecina, size_t col_vecina) const;
+  bool EsMovimientoDiagonal(size_t fila_actual, size_t col_actual,
+                           size_t fila_vecina, size_t col_vecina) const;
+  bool EsMovimientoHorizontalOVertical(size_t fila_actual, size_t col_actual,
+                                      size_t fila_vecina, size_t col_vecina) const;
 };
 
 #endif
