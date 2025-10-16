@@ -80,14 +80,15 @@ void Usage(void) {
 }
 
 
-void Menu(Laberinto& laberinto) {
+void Menu(Laberinto& laberinto, const std::string& output_file) {
   int opcion = 0;
+  std::cout << "DEBUG: Archivo de salida = '" << output_file << "'" << std::endl; 
   do {
     std::cout << "\n========== MENÚ DE PRUEBAS ==========\n";
     std::cout << "1. Imprimir laberinto\n";
     std::cout << "2. Cambiar entrada (Start)\n";
     std::cout << "3. Cambiar salida (Exit)\n";
-    std::cout << "4. Cambiar entrada y salida\n";
+    std::cout << "4. Dinamismo laberinto\n";
     std::cout << "5. Salir\n";
     std::cout << "Seleccione una opción: ";
     std::cin >> opcion;
@@ -120,7 +121,26 @@ void Menu(Laberinto& laberinto) {
         break;
       }
       case 4:
-      
+        std::cout << "\nAplicando dinamismo al laberinto...\n";
+        laberinto.ActualizarDinamismo();
+        
+        // MOSTRAR SIEMPRE el laberinto actualizado
+        std::cout << "\n--- LABERINTO ACTUALIZADO ---\n";
+        laberinto.ImprimirLaberinto();
+        
+        // Guardar en archivo si se especificó
+        if (!output_file.empty()) {
+          std::ofstream Output(output_file, std::ios::app);
+          if (Output.is_open()) {
+            Output << laberinto;
+            Output << "\n";
+            std::cout << "Laberinto guardado en: " << output_file << "\n";
+            Output.close();
+          } else {
+            std::cerr << "Error: No se pudo abrir el archivo " << output_file << " para escritura.\n";
+          }
+        }
+        break;
       case 5:
         std::cout << "\nSaliendo del programa...\n";
         break;
@@ -128,5 +148,5 @@ void Menu(Laberinto& laberinto) {
         std::cout << "Opción no válida. Intente de nuevo.\n";
         break;
     }
-  } while (opcion != 4);
+  } while (opcion != 5);
 }

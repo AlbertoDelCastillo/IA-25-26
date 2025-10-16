@@ -20,6 +20,6 @@
 bool CheckCorrectsParameters(const int, char**);
 void PrintProgramPorpouse(void);
 void Usage(void);
-void Menu(Laberinto&);
+void Menu(Laberinto&, const std::string&);
 
 #endif

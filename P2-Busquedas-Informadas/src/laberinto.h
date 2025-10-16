@@ -21,6 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <utility>
+#include <random>
 #include "casilla.h"
 
 /**
@@ -37,11 +38,15 @@ class Laberinto {
   void ImprimirLaberinto() const;
   void CambiarStart(const size_t, const size_t);
   void CambiarExit(const size_t, const size_t);
-  std::vector<std::pair<size_t, size_t>> GetVecinosCasilla(const size_t, const size_t) const;
-  size_t MoveCost(const size_t, const size_t) const;
+  void ActualizarDinamismo();
+  // Metodos de utilidad para A*
+  // std::vector<std::pair<size_t, size_t>> GetVecinosCasilla(const size_t, const size_t) const;
+  // size_t MoveCost(const size_t, const size_t) const;
   // Google Style getters
   int filas() const noexcept { return filas_; }
   int columnas() const noexcept {return columnas_; }
+  // Sobrecarga operadores
+  friend std::ostream& operator<<(std::ostream&, const Laberinto&);
  private:
   size_t filas_{};
   size_t columnas_{};
@@ -53,6 +58,12 @@ class Laberinto {
   bool EsBorde(size_t fila, size_t columna) const noexcept;
   bool EsSalidaValida(size_t fila, size_t columna) const noexcept; 
   bool EsEntradaValida(size_t fila, size_t columna) const noexcept; 
+  // Metodos Auxiliares privados para dinamico
+  void MutarCeldas(const double, const double, std::mt19937&);
+  void EnforceMaxBloqueo(const double, std::mt19937&);
+  std::vector<std::pair<size_t, size_t>> ObtenerCasillasBloqueadas() const;
+  size_t ContarPorcentajeBloqueadas() const noexcept;
+  size_t ContarObstaculos() const noexcept;
 };
 
 #endif

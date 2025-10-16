@@ -42,6 +42,7 @@ class Casilla {
   // Metodos auxiliares
   char ImprimirCasilla() const noexcept;
   bool EsTransitable() const noexcept;
+  // Metodos de utilidad para A*
   // Google style getters
   Tipo_Casilla tipo() const noexcept { return tipo_; }
   // Setters

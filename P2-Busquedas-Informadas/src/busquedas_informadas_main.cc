@@ -24,6 +24,10 @@ int main(int argc, char* argv[]) {
   }
   PrintProgramPorpouse();
   Laberinto laberinto{argv[1]};
-  Menu(laberinto);
+  std::string nombre_output{""};
+  if (argc == 3) {
+    nombre_output = {argv[2]};
+  }
+  Menu(laberinto, nombre_output);
   return 0;
 }

@@ -12,8 +12,8 @@
   * @version 1.0
   */
 
-#ifndef BUSQUEDA_A_STAR_H
-#define BUSQUEDA_A_STAR_H
+#ifndef BUSQUEDA_INFORMADA_H
+#define BUSQUEDA_INFORMADA_H
 
 #include <iostream>
 #include <fstream>
