@@ -18,21 +18,26 @@
 #include <algorithm>
 #include "busqueda_informada.h"
 
-bool BusquedaInformada::BusquedaAStar() {
+bool BusquedaInformada::BusquedaAStar(const std::pair<size_t, size_t>& inicio) {
+  // Reset de estadísticas
+  nodos_generados_ = 0;
+  nodos_inspeccionados_ = 0;
+  camino_encontrado_.clear();
+  
   InicializarMatrizCostes();
-  std::vector<nodo> A{};  // Lista de nodos abiertos
-  std::set<std::pair<size_t, size_t>> C{};  // Lista nodos cerrados
+  std::vector<nodo> A{};
+  std::set<std::pair<size_t, size_t>> C{};
 
-  // Paso 1: Calcular f(n), g(n) y h(n) para el punto de entrada S
-  std::pair<size_t, size_t> pos_actual = laberinto_->coordenadas_start();
+  // USAR el parámetro 'inicio' en lugar de laberinto_->coordenadas_start()
+  std::pair<size_t, size_t> pos_actual = inicio;
   double g_cost = 0; 
   double h_cost = laberinto_->Heuristica(pos_actual.first, pos_actual.second);
   
   nodo S(pos_actual, g_cost, h_cost, {-1, -1});
   std::cerr << "Nodo inicial: " << S;
   matriz_costes_[pos_actual.first][pos_actual.second] = S;
-  A.push_back(S);  // Insertar en la lista de nodos abiertos
-  ++nodos_generados_;  // ← AÑADIDO
+  A.push_back(S);
+  ++nodos_generados_;
 
   // Paso 2: Repetir mientras A no esté vacía
   while (!A.empty()) {
@@ -44,19 +49,17 @@ bool BusquedaInformada::BusquedaAStar() {
       }
     }
     nodo actual = *it_mejor;
-    A.erase(it_mejor);  // Remover de A
+    A.erase(it_mejor);
     
     // Insertarlo en la lista de nodos cerrados C
-    C.insert(actual.posicion);  // ← Solo posición
-    ++nodos_inspeccionados_;  // ← AÑADIDO
+    C.insert(actual.posicion);
+    ++nodos_inspeccionados_;
     std::cerr << "Procesando nodo: " << actual;
     
     // Verificar si llegamos a la salida
     if (actual.posicion == laberinto_->coordenadas_exit()) {
       std::cout << "¡Camino encontrado!" << std::endl;
-      camino_encontrado_ = ReconstruirCamino(
-        laberinto_->coordenadas_exit()
-      );
+      camino_encontrado_ = ReconstruirCamino(actual.posicion);
       return true;
     }
     
@@ -78,7 +81,7 @@ bool BusquedaInformada::BusquedaAStar() {
                  {static_cast<int>(actual.posicion.first), static_cast<int>(actual.posicion.second)});
       
       // Verificar si el nodo está en C (cerrados)
-      bool en_C = (C.find(vecino_pos) != C.end());  // ← Solo posición
+      bool en_C = (C.find(vecino_pos) != C.end());
 
       // Verificar si el nodo está en A (abiertos)
       bool en_A = false;
@@ -95,8 +98,8 @@ bool BusquedaInformada::BusquedaAStar() {
       if (!en_A && !en_C) {
         vecino.padre = {static_cast<int>(actual.posicion.first), static_cast<int>(actual.posicion.second)};
         matriz_costes_[vecino_fila][vecino_col] = vecino;
-        A.push_back(vecino);  // Insertar en A
-        ++nodos_generados_;  // ← AÑADIDO
+        A.push_back(vecino);
+        ++nodos_generados_;
         std::cerr << "  Nuevo nodo añadido a A: " << vecino;
       }
       // Paso 2(b)ii: Si el nodo está en A
@@ -182,11 +185,6 @@ std::vector<std::pair<size_t, size_t>> BusquedaInformada::ReconstruirCamino(
   return camino;
 }
 
-bool BusquedaInformada::BusquedaAStarDinamica() {
-
-  }
-
-
 void BusquedaInformada::ImprimirLaberintoConCamino(std::ostream& os) const {
     if (!laberinto_) return;
     
@@ -199,21 +197,26 @@ void BusquedaInformada::ImprimirLaberintoConCamino(std::ostream& os) const {
     auto start = laberinto_->coordenadas_start();
     auto exit = laberinto_->coordenadas_exit();
     
-    for (size_t i = 0; i < laberinto_->filas(); ++i) {
-        for (size_t j = 0; j < laberinto_->columnas(); ++j) {
+    for (size_t i = 0; i < static_cast<size_t>(laberinto_->filas()); ++i) {
+        for (size_t j = 0; j < static_cast<size_t>(laberinto_->columnas()); ++j) {
             std::pair<size_t, size_t> pos_actual(i, j);
             
-            // Verificar si es parte del camino (pero no inicio ni fin)
-            if (camino_set.find(pos_actual) != camino_set.end() && 
-                pos_actual != start && pos_actual != exit) {
-                os << "*";
+            // Verificar si es parte del camino
+            if (camino_set.find(pos_actual) != camino_set.end()) {
+                if (pos_actual == start) {
+                    os << "S";  // Start
+                } else if (pos_actual == exit) {
+                    os << "E";  // Exit
+                } else {
+                    os << "*";  // Camino
+                }
             } else {
                 // Imprimir el laberinto normal
                 char simbolo = laberinto_->getCasilla(i, j).ImprimirCasilla();
                 os << simbolo;
             }
             
-            if (j + 1 < laberinto_->columnas()) os << ' ';
+            if (j + 1 < static_cast<size_t>(laberinto_->columnas())) os << ' ';
         }
         os << "\n";
     }
@@ -257,5 +260,248 @@ void BusquedaInformada::GenerarReporteCompleto(const std::string& nombre_instanc
     if (!camino_encontrado_.empty()) {
         os << "Detalle del camino:\n";
         ImprimirCamino(os);
+    }
+}
+
+// ========== busqueda_informada.cc (AÑADIR/REEMPLAZAR) ==========
+
+// ========== busqueda_informada.cc (MODIFICAR) ==========
+
+
+
+bool BusquedaInformada::BusquedaAStarDinamica() {
+  if (!laberinto_) {
+    std::cerr << "Error: Laberinto no configurado.\n";
+    return false;
+  }
+
+  std::ofstream archivo_salida("salida_dinamica.txt");
+  if (!archivo_salida.is_open()) {
+    std::cerr << "Error: No se pudo crear salida_dinamica.txt\n";
+    return false;
+  }
+
+  archivo_salida << "========================================\n";
+  archivo_salida << "BÚSQUEDA A* EN ENTORNO DINÁMICO\n";
+  archivo_salida << "========================================\n\n";
+
+  auto start_pos = laberinto_->coordenadas_start();
+  auto exit_pos = laberinto_->coordenadas_exit();
+  std::pair<size_t, size_t> posicion_actual = start_pos;
+
+  size_t iteracion = 0;
+  size_t pasos_totales = 0;
+  size_t nodos_generados_acumulados = 0;
+  size_t nodos_inspeccionados_acumulados = 0;
+  size_t reintentos_sin_exito_consecutivos = 0;
+  const size_t MAX_REINTENTOS = 5;
+
+  std::vector<std::pair<size_t, size_t>> camino_real_seguido;
+  camino_real_seguido.push_back(posicion_actual);
+
+  std::cout << "\n=== INICIANDO BÚSQUEDA A* DINÁMICA ===\n";
+  std::cout << "Inicio: (" << posicion_actual.first << "," << posicion_actual.second << ")\n";
+  std::cout << "Meta: (" << exit_pos.first << "," << exit_pos.second << ")\n\n";
+
+  while (posicion_actual != exit_pos) {
+    ++iteracion;
+
+    archivo_salida << "----------------------------------------\n";
+    archivo_salida << "ITERACIÓN " << iteracion << "\n";
+    archivo_salida << "----------------------------------------\n";
+    archivo_salida << "Posición actual del agente: (" 
+                   << posicion_actual.first << "," << posicion_actual.second << ")\n\n";
+
+    std::cout << "Iteración " << iteracion << ": Ejecutando A* desde (" 
+              << posicion_actual.first << "," << posicion_actual.second << ")...\n";
+
+    bool camino_encontrado = BusquedaAStar(posicion_actual);
+
+    if (camino_encontrado) {
+      reintentos_sin_exito_consecutivos = 0;
+
+      // CAMBIO AQUÍ: Usar el nuevo método con agente y camino histórico
+      archivo_salida << "Laberinto con camino planificado:\n";
+      archivo_salida << "Símbolos: @ = Agente | * = Camino planificado | · = Pasos dados | E = Meta\n\n";
+      ImprimirLaberintoConCaminoYAgente(archivo_salida, posicion_actual, camino_real_seguido);
+      archivo_salida << "\n";
+
+      nodos_generados_acumulados += nodos_generados_;
+      nodos_inspeccionados_acumulados += nodos_inspeccionados_;
+
+      archivo_salida << "Camino planificado (longitud " << camino_encontrado_.size() << "):\n";
+      for (const auto& [f, c] : camino_encontrado_) {
+        archivo_salida << "(" << f << "," << c << ") ";
+      }
+      archivo_salida << "\n\n";
+
+      archivo_salida << "Estadísticas de esta planificación:\n";
+      archivo_salida << "  - Nodos generados: " << nodos_generados_ << "\n";
+      archivo_salida << "  - Nodos inspeccionados: " << nodos_inspeccionados_ << "\n\n";
+
+      if (camino_encontrado_.size() >= 2) {
+        posicion_actual = camino_encontrado_[1];
+        camino_real_seguido.push_back(posicion_actual);
+        ++pasos_totales;
+
+        archivo_salida << "Agente avanza a: (" 
+                       << posicion_actual.first << "," << posicion_actual.second << ")\n\n";
+        
+        std::cout << "  → Avanzó a (" << posicion_actual.first << "," 
+                  << posicion_actual.second << ")\n";
+
+        if (posicion_actual == exit_pos) {
+          archivo_salida << "*** ¡AGENTE LLEGÓ A LA META! ***\n\n";
+          std::cout << "\n¡ÉXITO! El agente llegó a la meta.\n";
+          break;
+        }
+
+        archivo_salida << "Actualizando entorno dinámico...\n\n";
+        laberinto_->ActualizarDinamismo();
+        
+      } else {
+        archivo_salida << "*** ¡AGENTE YA ESTÁ EN LA META! ***\n\n";
+        break;
+      }
+
+    } else {
+      archivo_salida << "*** NO SE ENCONTRÓ CAMINO EN ESTA ITERACIÓN ***\n";
+      archivo_salida << "Reintento " << (reintentos_sin_exito_consecutivos + 1) 
+                     << " de " << MAX_REINTENTOS << "\n\n";
+      
+      std::cout << "  ⚠ No hay camino. Reintento " << (reintentos_sin_exito_consecutivos + 1) 
+                << "/" << MAX_REINTENTOS << "\n";
+
+      ++reintentos_sin_exito_consecutivos;
+
+      if (reintentos_sin_exito_consecutivos >= MAX_REINTENTOS) {
+        archivo_salida << "*** MÁXIMO DE REINTENTOS ALCANZADO ***\n";
+        archivo_salida << "*** NO ES POSIBLE LLEGAR AL DESTINO ***\n\n";
+        
+        std::cout << "\n❌ FALLO: No se pudo llegar al destino tras " 
+                  << MAX_REINTENTOS << " reintentos.\n";
+        
+        ImprimirResumenFinal(archivo_salida, iteracion, pasos_totales, 
+                           nodos_generados_acumulados, nodos_inspeccionados_acumulados,
+                           camino_real_seguido, false);
+        archivo_salida.close();
+        return false;
+      }
+
+      archivo_salida << "Actualizando entorno para reintentar...\n\n";
+      laberinto_->ActualizarDinamismo();
+    }
+  }
+
+  ImprimirResumenFinal(archivo_salida, iteracion, pasos_totales, 
+                      nodos_generados_acumulados, nodos_inspeccionados_acumulados,
+                      camino_real_seguido, true);
+
+  archivo_salida.close();
+  std::cout << "\n✅ Resultados guardados en: salida_dinamica.txt\n";
+  return true;
+}
+
+
+void BusquedaInformada::ImprimirResumenFinal(std::ostream& os, 
+                                             size_t iteraciones,
+                                             size_t pasos,
+                                             size_t nodos_gen,
+                                             size_t nodos_insp,
+                                             const std::vector<std::pair<size_t, size_t>>& camino,
+                                             bool exito) const {
+  os << "========================================\n";
+  os << "RESUMEN FINAL\n";
+  os << "========================================\n\n";
+
+  os << "Estado final: " << (exito ? "ÉXITO ✓" : "FALLO ✗") << "\n\n";
+
+  os << "Métricas globales:\n";
+  os << "  - Total de iteraciones: " << iteraciones << "\n";
+  os << "  - Pasos realizados por el agente: " << pasos << "\n";
+  os << "  - Total nodos generados (acumulado): " << nodos_gen << "\n";
+  os << "  - Total nodos inspeccionados (acumulado): " << nodos_insp << "\n\n";
+
+  if (exito && !camino.empty()) {
+    os << "Camino real seguido por el agente (" << camino.size() << " posiciones):\n";
+    for (size_t i = 0; i < camino.size(); ++i) {
+      os << "(" << camino[i].first << "," << camino[i].second << ")";
+      if (i + 1 < camino.size()) os << " -> ";
+    }
+    os << "\n\n";
+
+    // Calcular coste total del camino real
+    if (laberinto_ && camino.size() > 1) {
+      double coste_total = 0.0;
+      for (size_t i = 0; i < camino.size() - 1; ++i) {
+        auto [f1, c1] = camino[i];
+        auto [f2, c2] = camino[i + 1];
+        double coste = laberinto_->MoveCost(f1, c1, f2, c2);
+        coste_total += coste;
+      }
+      os << "Coste total del camino seguido: " << coste_total << "\n\n";
+    }
+  }
+
+  os << "========================================\n";
+  os << "FIN DEL REPORTE\n";
+  os << "========================================\n";
+}
+
+void BusquedaInformada::ImprimirLaberintoConCaminoYAgente(
+    std::ostream& os,
+    const std::pair<size_t, size_t>& posicion_agente,
+    const std::vector<std::pair<size_t, size_t>>& camino_historico) const {
+    
+    if (!laberinto_) return;
+    
+    // Crear conjuntos para búsquedas rápidas
+    std::set<std::pair<size_t, size_t>> camino_planificado_set;
+    for (const auto& pos : camino_encontrado_) {
+        camino_planificado_set.insert(pos);
+    }
+    
+    std::set<std::pair<size_t, size_t>> camino_historico_set;
+    for (const auto& pos : camino_historico) {
+        camino_historico_set.insert(pos);
+    }
+    
+    auto start = laberinto_->coordenadas_start();
+    auto exit = laberinto_->coordenadas_exit();
+    
+    for (size_t i = 0; i < static_cast<size_t>(laberinto_->filas()); ++i) {
+        for (size_t j = 0; j < static_cast<size_t>(laberinto_->columnas()); ++j) {
+            std::pair<size_t, size_t> pos_actual(i, j);
+            
+            // PRIORIDAD DE SÍMBOLOS (de mayor a menor importancia)
+            
+            // 1. Posición del agente (la más importante)
+            if (pos_actual == posicion_agente) {
+                os << "@";  // Agente actual
+            }
+            // 2. Start y Exit originales (si no han sido reemplazados)
+            else if (pos_actual == exit) {
+                os << "E";  // Meta/Exit
+            }
+            else if (pos_actual == start && camino_historico_set.find(pos_actual) == camino_historico_set.end()) {
+                os << "S";  // Start (solo si no ha sido pisado)
+            }
+            // 3. Camino planificado (donde va a ir)
+            else if (camino_planificado_set.find(pos_actual) != camino_planificado_set.end()) {
+                os << "*";  // Camino planificado futuro
+            }
+            // 4. Camino histórico (por donde ya pasó)
+            else if (camino_historico_set.find(pos_actual) != camino_historico_set.end()) {
+                os << "·";  // Pasos ya dados (punto medio)
+            }
+            // 5. Laberinto normal
+            else {
+                char simbolo = laberinto_->getCasilla(i, j).ImprimirCasilla();
+                os << simbolo;
+            }
+            
+            if (j + 1 < static_cast<size_t>(laberinto_->columnas())) os << ' ';
+        }
+        os << "\n";
     }
 }

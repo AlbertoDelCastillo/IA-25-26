@@ -57,7 +57,7 @@ class BusquedaInformada {
   BusquedaInformada(const BusquedaInformada&) = delete;
   BusquedaInformada& operator=(const BusquedaInformada&) = delete;
   //Metodo de busqueda A*
-  bool BusquedaAStar();
+  bool BusquedaAStar(const std::pair<size_t, size_t>&);
   bool BusquedaAStarDinamica();
   // Getters
   const std::vector<std::pair<size_t, size_t>>& GetCamino() const { 
@@ -69,6 +69,11 @@ class BusquedaInformada {
   void ImprimirCamino(std::ostream& os = std::cout) const;
   void ImprimirEstadisticas(std::ostream& os = std::cout) const;
   void ImprimirLaberintoConCamino(std::ostream& os = std::cout) const;
+  void ImprimirLaberintoConCaminoYAgente(
+    std::ostream& os,
+    const std::pair<size_t, size_t>& posicion_agente,
+    const std::vector<std::pair<size_t, size_t>>& camino_historico = {}
+  ) const;
   void GenerarReporteCompleto(const std::string& nombre_instancia, 
                            const std::string& nombre_heuristica,
                            std::ostream& os = std::cout) const;
@@ -84,7 +89,13 @@ class BusquedaInformada {
   std::vector<std::pair<size_t, size_t>> ReconstruirCamino(
     const std::pair<size_t, size_t>& meta
   );
-
+  void ImprimirResumenFinal(std::ostream& os,
+                           size_t iteraciones,
+                           size_t pasos,
+                           size_t nodos_gen,
+                           size_t nodos_insp,
+                           const std::vector<std::pair<size_t, size_t>>& camino,
+                           bool exito) const;
 };
 
 #endif

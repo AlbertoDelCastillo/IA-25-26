@@ -144,7 +144,7 @@ void Menu(Laberinto& laberinto, BusquedaInformada& A, const std::string& output_
         break;
       case 5:
         std::cout << "\nComenzando la búsqueda A*...\n";
-        if (A.BusquedaAStar()) {
+        if (A.BusquedaAStar(laberinto.coordenadas_start())) {
           std::cout << "\n¡Búsqueda exitosa!\n";
                 // Mostrar resultados en pantalla
                 A.GenerarReporteCompleto("M_1", "Manhattan", std::cout);
