@@ -18,7 +18,7 @@
 
 #include <iostream>
 
-enum class Tipo_Casilla : size_t {
+enum class Tipo_Casilla : int {
   Libre = 0,
   Obstaculo = 1,
   Start = 3,

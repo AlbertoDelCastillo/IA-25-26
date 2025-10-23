@@ -33,9 +33,9 @@ Tipo_Casilla FromInt(const int valor){
 char Casilla::ImprimirCasilla() const noexcept {
   switch (tipo_) {
     case Tipo_Casilla::Libre:
-      return '0';
+      return ' ';
     case Tipo_Casilla::Obstaculo:
-      return '1';
+      return '#';
     case Tipo_Casilla::Start:
       return '3';
     case Tipo_Casilla::Exit:

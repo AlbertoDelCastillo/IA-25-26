@@ -53,17 +53,37 @@ class BusquedaInformada {
  public:
   BusquedaInformada() = default;
   BusquedaInformada(Laberinto& laberinto) : laberinto_{&laberinto} {}
+  // Eliminar copia y asignación para evitar problemas con el puntero
+  BusquedaInformada(const BusquedaInformada&) = delete;
+  BusquedaInformada& operator=(const BusquedaInformada&) = delete;
   //Metodo de busqueda A*
   bool BusquedaAStar();
-  
+  bool BusquedaAStarDinamica();
+  // Getters
+  const std::vector<std::pair<size_t, size_t>>& GetCamino() const { 
+    return camino_encontrado_; 
+  }
+  size_t GetNodosGenerados() const { return nodos_generados_; }
+  size_t GetNodosInspeccionados() const { return nodos_inspeccionados_; }
+  // Impresión
+  void ImprimirCamino(std::ostream& os = std::cout) const;
+  void ImprimirEstadisticas(std::ostream& os = std::cout) const;
+  void ImprimirLaberintoConCamino(std::ostream& os = std::cout) const;
+  void GenerarReporteCompleto(const std::string& nombre_instancia, 
+                           const std::string& nombre_heuristica,
+                           std::ostream& os = std::cout) const;
+
  private:
   Laberinto* laberinto_{};
   std::vector<std::pair<size_t, size_t>> camino_encontrado_{};
-  size_t nodo_generados_{};
-  size_t nodo_inspeccionados_{};
+  size_t nodos_generados_{};
+  size_t nodos_inspeccionados_{};
   std::vector<std::vector<nodo>> matriz_costes_{};
-  // Metodos auziliares
+  // Metodos auxiliares
   void InicializarMatrizCostes();
+  std::vector<std::pair<size_t, size_t>> ReconstruirCamino(
+    const std::pair<size_t, size_t>& meta
+  );
 
 };
 

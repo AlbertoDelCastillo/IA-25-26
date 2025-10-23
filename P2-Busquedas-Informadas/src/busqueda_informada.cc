@@ -15,13 +15,14 @@
 #include <vector>
 #include <set>
 #include <utility>
+#include <algorithm>
 #include "busqueda_informada.h"
 
 bool BusquedaInformada::BusquedaAStar() {
   InicializarMatrizCostes();
   std::vector<nodo> A{};  // Lista de nodos abiertos
-  std::set<nodo> C{};     // Lista de nodos cerrados
-  
+  std::set<std::pair<size_t, size_t>> C{};  // Lista nodos cerrados
+
   // Paso 1: Calcular f(n), g(n) y h(n) para el punto de entrada S
   std::pair<size_t, size_t> pos_actual = laberinto_->coordenadas_start();
   double g_cost = 0; 
@@ -31,7 +32,8 @@ bool BusquedaInformada::BusquedaAStar() {
   std::cerr << "Nodo inicial: " << S;
   matriz_costes_[pos_actual.first][pos_actual.second] = S;
   A.push_back(S);  // Insertar en la lista de nodos abiertos
-  
+  ++nodos_generados_;  // ← AÑADIDO
+
   // Paso 2: Repetir mientras A no esté vacía
   while (!A.empty()) {
     // Paso 2(a): Seleccionar el nodo de menor coste f(n)
@@ -45,12 +47,16 @@ bool BusquedaInformada::BusquedaAStar() {
     A.erase(it_mejor);  // Remover de A
     
     // Insertarlo en la lista de nodos cerrados C
-    C.insert(actual);
+    C.insert(actual.posicion);  // ← Solo posición
+    ++nodos_inspeccionados_;  // ← AÑADIDO
     std::cerr << "Procesando nodo: " << actual;
     
     // Verificar si llegamos a la salida
     if (actual.posicion == laberinto_->coordenadas_exit()) {
       std::cout << "¡Camino encontrado!" << std::endl;
+      camino_encontrado_ = ReconstruirCamino(
+        laberinto_->coordenadas_exit()
+      );
       return true;
     }
     
@@ -72,8 +78,8 @@ bool BusquedaInformada::BusquedaAStar() {
                  {static_cast<int>(actual.posicion.first), static_cast<int>(actual.posicion.second)});
       
       // Verificar si el nodo está en C (cerrados)
-      bool en_C = (C.find(vecino) != C.end());
-      
+      bool en_C = (C.find(vecino_pos) != C.end());  // ← Solo posición
+
       // Verificar si el nodo está en A (abiertos)
       bool en_A = false;
       auto it_en_A = A.end();
@@ -90,6 +96,7 @@ bool BusquedaInformada::BusquedaAStar() {
         vecino.padre = {static_cast<int>(actual.posicion.first), static_cast<int>(actual.posicion.second)};
         matriz_costes_[vecino_fila][vecino_col] = vecino;
         A.push_back(vecino);  // Insertar en A
+        ++nodos_generados_;  // ← AÑADIDO
         std::cerr << "  Nuevo nodo añadido a A: " << vecino;
       }
       // Paso 2(b)ii: Si el nodo está en A
@@ -123,4 +130,132 @@ void BusquedaInformada::InicializarMatrizCostes() {
   
   matriz_costes_.clear();
   matriz_costes_.resize(filas, std::vector<nodo>(cols));
+}
+
+// Implementa en busqueda_informada.cc
+void BusquedaInformada::ImprimirCamino(std::ostream& os) const {
+  if (camino_encontrado_.empty()) {
+    os << "No se encontró camino.\n";
+    return;
+  }
+  
+  os << "Camino encontrado (" << camino_encontrado_.size() << " pasos):\n";
+  for (size_t i = 0; i < camino_encontrado_.size(); ++i) {
+    auto [fila, col] = camino_encontrado_[i];
+    os << "(" << fila << ", " << col << ")";
+    if (i + 1 < camino_encontrado_.size()) os << " -> ";
+  }
+  os << "\n";
+}
+
+void BusquedaInformada::ImprimirEstadisticas(std::ostream& os) const {
+  os << "\n=== Estadísticas A* ===\n";
+  os << "Nodos generados: " << nodos_generados_ << "\n";
+  os << "Nodos inspeccionados: " << nodos_inspeccionados_ << "\n";
+  os << "Camino encontrado: " << (camino_encontrado_.empty() ? "NO" : "SÍ") << "\n";
+  if (!camino_encontrado_.empty()) {
+    os << "Longitud del camino: " << camino_encontrado_.size() << " pasos\n";
+    auto [exit_f, exit_c] = laberinto_->coordenadas_exit();
+    os << "Coste total: " << matriz_costes_[exit_f][exit_c].g_cost << "\n";
+  }
+}
+
+std::vector<std::pair<size_t, size_t>> BusquedaInformada::ReconstruirCamino(
+    const std::pair<size_t, size_t>& meta) {
+  
+  std::vector<std::pair<size_t, size_t>> camino;
+  std::pair<int, int> actual = {static_cast<int>(meta.first), 
+                                static_cast<int>(meta.second)};
+  
+  // Seguir los padres desde meta hasta inicio
+  while (actual != std::make_pair(-1, -1)) {
+    camino.push_back({static_cast<size_t>(actual.first), 
+                      static_cast<size_t>(actual.second)});
+    
+    size_t fila = static_cast<size_t>(actual.first);
+    size_t col = static_cast<size_t>(actual.second);
+    actual = matriz_costes_[fila][col].padre;
+  }
+  
+  // Invertir (está desde meta a inicio)
+  std::reverse(camino.begin(), camino.end());
+  return camino;
+}
+
+bool BusquedaInformada::BusquedaAStarDinamica() {
+
+  }
+
+
+void BusquedaInformada::ImprimirLaberintoConCamino(std::ostream& os) const {
+    if (!laberinto_) return;
+    
+    // Crear un conjunto con las posiciones del camino para verificación rápida
+    std::set<std::pair<size_t, size_t>> camino_set;
+    for (const auto& pos : camino_encontrado_) {
+        camino_set.insert(pos);
+    }
+    
+    auto start = laberinto_->coordenadas_start();
+    auto exit = laberinto_->coordenadas_exit();
+    
+    for (size_t i = 0; i < laberinto_->filas(); ++i) {
+        for (size_t j = 0; j < laberinto_->columnas(); ++j) {
+            std::pair<size_t, size_t> pos_actual(i, j);
+            
+            // Verificar si es parte del camino (pero no inicio ni fin)
+            if (camino_set.find(pos_actual) != camino_set.end() && 
+                pos_actual != start && pos_actual != exit) {
+                os << "*";
+            } else {
+                // Imprimir el laberinto normal
+                char simbolo = laberinto_->getCasilla(i, j).ImprimirCasilla();
+                os << simbolo;
+            }
+            
+            if (j + 1 < laberinto_->columnas()) os << ' ';
+        }
+        os << "\n";
+    }
+}
+
+void BusquedaInformada::GenerarReporteCompleto(const std::string& nombre_instancia,
+                                              const std::string& nombre_heuristica,
+                                              std::ostream& os) const {
+    if (!laberinto_) return;
+    
+    // 1. Tabla de resultados
+    os << "Búsqueda A*. Función heurística " << nombre_heuristica << "\n";
+    os << "| Instancia | n | m | S | E | Camino | Coste | Número de nodos generados | Número de nodos inspeccionados |\n";
+    os << "|-----------|---|---|---|----|--------|-------|--------------------------|--------------------------------|\n";
+    
+    auto start = laberinto_->coordenadas_start();
+    auto exit = laberinto_->coordenadas_exit();
+    double coste_total = camino_encontrado_.empty() ? 0 : 
+                        matriz_costes_[exit.first][exit.second].g_cost;
+    
+    os << "| " << nombre_instancia 
+       << " | " << laberinto_->filas()
+       << " | " << laberinto_->columnas()
+       << " | (" << start.first << "," << start.second << ")"
+       << " | (" << exit.first << "," << exit.second << ")"
+       << " | " << (camino_encontrado_.empty() ? "NO" : "SI")
+       << " | " << coste_total
+       << " | " << nodos_generados_
+       << " | " << nodos_inspeccionados_ << " |\n\n";
+    
+    // 2. Laberinto con camino marcado
+    os << "Laberinto con camino solución:\n";
+    ImprimirLaberintoConCamino(os);
+    os << "\n";
+    
+    // 3. Estadísticas detalladas
+    ImprimirEstadisticas(os);
+    os << "\n";
+    
+    // 4. Detalles del camino encontrado
+    if (!camino_encontrado_.empty()) {
+        os << "Detalle del camino:\n";
+        ImprimirCamino(os);
+    }
 }

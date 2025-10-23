@@ -88,8 +88,9 @@ void Menu(Laberinto& laberinto, BusquedaInformada& A, const std::string& output_
     std::cout << "2. Cambiar entrada (Start)\n";
     std::cout << "3. Cambiar salida (Exit)\n";
     std::cout << "4. Dinamismo laberinto\n";
-    std::cout << "5. A*\n";
-    std::cout << "6. Salir\n";
+    std::cout << "5. A*(Estatica)\n";
+    std::cout << "6. A* Dianamico\n";
+    std::cout << "7. Salir\n";
     std::cout << "Seleccione una opción: ";
     std::cin >> opcion;
     switch (opcion) {
@@ -142,16 +143,37 @@ void Menu(Laberinto& laberinto, BusquedaInformada& A, const std::string& output_
         }
         break;
       case 5:
-        std::cout << "\nComenzando la busqueda.\n";
-        A.BusquedaAStar();
-        std::cout << "\nTermino la busqueda.\n";
+        std::cout << "\nComenzando la búsqueda A*...\n";
+        if (A.BusquedaAStar()) {
+          std::cout << "\n¡Búsqueda exitosa!\n";
+                // Mostrar resultados en pantalla
+                A.GenerarReporteCompleto("M_1", "Manhattan", std::cout);
+                // Guardar en archivo si se especificó
+                if (!output_file.empty()) {
+                    std::ofstream Output(output_file);
+                    if (Output.is_open()) {
+                        A.GenerarReporteCompleto("M_1", "Manhattan", Output);
+                        std::cout << "Resultados guardados en: " << output_file << "\n";
+                        Output.close();
+                    }
+                }
+          } else {
+            std::cout << "\nNo se encontró camino.\n";
+          }
         break;
       case 6:
+   if (A.BusquedaAStarDinamica()) {
+          std::cout << "OK. Revisa salida_dinamica.txt (todas las iteraciones).\n";
+        } else {
+          std::cout << "Error generando la salida dinamica.\n";
+        }
+        break;
+      case 7:
         std::cout << "\nSaliendo del programa...\n";
         break;
       default:
         std::cout << "Opción no válida. Intente de nuevo.\n";
         break;
     }
-  } while (opcion != 6);
+  } while (opcion != 7);
 }
