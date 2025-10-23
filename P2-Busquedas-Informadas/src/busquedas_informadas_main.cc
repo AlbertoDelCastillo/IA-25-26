@@ -17,6 +17,7 @@
 #include <string>
 #include "funciones_cliente.h"
 #include "laberinto.h"
+#include "busqueda_informada.h"
 
 int main(int argc, char* argv[]) {
   if (!CheckCorrectsParameters(argc, argv)) {
@@ -24,10 +25,11 @@ int main(int argc, char* argv[]) {
   }
   PrintProgramPorpouse();
   Laberinto laberinto{argv[1]};
+  BusquedaInformada A{laberinto};
   std::string nombre_output{""};
   if (argc == 3) {
     nombre_output = {argv[2]};
   }
-  Menu(laberinto, nombre_output);
+  Menu(laberinto, A, nombre_output);
   return 0;
 }

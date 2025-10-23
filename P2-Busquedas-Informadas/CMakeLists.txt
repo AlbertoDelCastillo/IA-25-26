@@ -55,6 +55,8 @@ add_executable(BusquedasInformadas
     src/laberinto.cc
     src/funciones_cliente.h
     src/funciones_cliente.cc
+    src/busqueda_informada.h
+    src/busqueda_informada.cc
     src/busquedas_informadas_main.cc)
 
 # Add expected compiler features to a target.

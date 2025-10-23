@@ -16,10 +16,11 @@
 #define FUNCIONES_CLIENTE_H
 
 #include "laberinto.h"
+#include "busqueda_informada.h"
 
 bool CheckCorrectsParameters(const int, char**);
 void PrintProgramPorpouse(void);
 void Usage(void);
-void Menu(Laberinto&, const std::string&);
+void Menu(Laberinto&, BusquedaInformada&, const std::string&);
 
 #endif

@@ -80,7 +80,7 @@ void Usage(void) {
 }
 
 
-void Menu(Laberinto& laberinto, const std::string& output_file) {
+void Menu(Laberinto& laberinto, BusquedaInformada& A, const std::string& output_file) {
   int opcion = 0;
   do {
     std::cout << "\n========== MENÚ DE PRUEBAS ==========\n";
@@ -88,7 +88,8 @@ void Menu(Laberinto& laberinto, const std::string& output_file) {
     std::cout << "2. Cambiar entrada (Start)\n";
     std::cout << "3. Cambiar salida (Exit)\n";
     std::cout << "4. Dinamismo laberinto\n";
-    std::cout << "5. Salir\n";
+    std::cout << "5. A*\n";
+    std::cout << "6. Salir\n";
     std::cout << "Seleccione una opción: ";
     std::cin >> opcion;
     switch (opcion) {
@@ -141,11 +142,16 @@ void Menu(Laberinto& laberinto, const std::string& output_file) {
         }
         break;
       case 5:
+        std::cout << "\nComenzando la busqueda.\n";
+        A.BusquedaAStar();
+        std::cout << "\nTermino la busqueda.\n";
+        break;
+      case 6:
         std::cout << "\nSaliendo del programa...\n";
         break;
       default:
         std::cout << "Opción no válida. Intente de nuevo.\n";
         break;
     }
-  } while (opcion != 5);
+  } while (opcion != 6);
 }
