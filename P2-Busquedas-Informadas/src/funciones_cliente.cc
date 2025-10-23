@@ -79,101 +79,115 @@ void Usage(void) {
   std::cout << std::endl;
 }
 
-
+/**
+ * @brief Menu de opciones para realizar busquedas sobre un laberinto
+ * 
+ * @param laberinto Objeto laberinto
+ * @param A Agente para buscar los caminos
+ * @param output_file Nombre del fichero de salida
+ */
 void Menu(Laberinto& laberinto, BusquedaInformada& A, const std::string& output_file) {
   int opcion = 0;
   do {
-    std::cout << "\n========== MENÚ DE PRUEBAS ==========\n";
-    std::cout << "1. Imprimir laberinto\n";
-    std::cout << "2. Cambiar entrada (Start)\n";
-    std::cout << "3. Cambiar salida (Exit)\n";
-    std::cout << "4. Dinamismo laberinto\n";
-    std::cout << "5. A*(Estatica)\n";
-    std::cout << "6. A* Dianamico\n";
-    std::cout << "7. Salir\n";
+    std::cout << "\n========== BÚSQUEDAS INFORMADAS ==========\n";
+    std::cout << "1. Cambiar entrada y salida\n";
+    std::cout << "2. A* (Entorno Estático)\n";
+    std::cout << "3. A* (Entorno Dinámico)\n";
+    std::cout << "4. Mostrar laberinto actual\n";
+    std::cout << "5. Dinamizar laberinto\n";
+    std::cout << "6. A* (Entorno Estático) OCTILE\n";
+    std::cout << "7. A* (Entorno Dinámico) OCTILE\n";
+    std::cout << "8. Salir\n";
     std::cout << "Seleccione una opción: ";
     std::cin >> opcion;
     switch (opcion) {
       case 1: 
-        std::cout << "\n--- LABERINTO ACTUAL ---\n";
-        laberinto.ImprimirLaberinto();
+        // Cambiar entrada y salida juntas
+        size_t fila_start, col_start, fila_exit, col_exit;
+        std::cout << "\nCoordenadas ENTRADA (fila columna): ";
+        std::cin >> fila_start >> col_start;
+        std::cout << "Coordenadas SALIDA (fila columna): ";
+        std::cin >> fila_exit >> col_exit;
+        try {
+          laberinto.CambiarEntradaYSalida({fila_start, col_start}, 
+                                          {fila_exit, col_exit});
+          std::cout << "Entrada y salida actualizadas.\n";
+        } catch (const std::exception& e) {
+          std::cerr << "Error: " << e.what() << "\n";
+        }
         break;
+      
       case 2: 
-        size_t fila, columna;
-        std::cout << "\nIngrese coordenadas para la nueva ENTRADA (fila columna): ";
-        std::cin >> fila >> columna;
-        try {
-          laberinto.CambiarStart(fila, columna);
-          std::cout << "Entrada cambiada correctamente.\n";
-        } catch (const std::exception& e) {
-          std::cerr << "Error: " << e.what() << "\n";
-        }
-        break;
-      case 3: {
-        size_t fila, columna;
-        std::cout << "\nIngrese coordenadas para la nueva SALIDA (fila columna): ";
-        std::cin >> fila >> columna;
-        try {
-          laberinto.CambiarExit(fila, columna);
-          std::cout << "Salida cambiada correctamente.\n";
-        } catch (const std::exception& e) {
-          std::cerr << "Error: " << e.what() << "\n";
-        }
-        break;
-      }
-      case 4:
-        std::cout << "\nAplicando dinamismo al laberinto...\n";
-        laberinto.ActualizarDinamismo();
-        
-        // MOSTRAR SIEMPRE el laberinto actualizado
-        std::cout << "\n--- LABERINTO ACTUALIZADO ---\n";
-        laberinto.ImprimirLaberinto();
-        
-        // Guardar en archivo si se especificó
-        if (!output_file.empty()) {
-          std::ofstream Output(output_file, std::ios::app);
-          if (Output.is_open()) {
-            Output << laberinto;
-            Output << "\n";
-            std::cout << "Laberinto guardado en: " << output_file << "\n";
-            Output.close();
-          } else {
-            std::cerr << "Error: No se pudo abrir el archivo " << output_file << " para escritura.\n";
-          }
-        }
-        break;
-      case 5:
-        std::cout << "\nComenzando la búsqueda A*...\n";
+        // A* Estático
+        std::cout << "\n=== BÚSQUEDA A* ESTÁTICA ===\n";
         if (A.BusquedaAStar(laberinto.coordenadas_start())) {
-          std::cout << "\n¡Búsqueda exitosa!\n";
-                // Mostrar resultados en pantalla
-                A.GenerarReporteCompleto("M_1", "Manhattan", std::cout);
-                // Guardar en archivo si se especificó
-                if (!output_file.empty()) {
-                    std::ofstream Output(output_file);
-                    if (Output.is_open()) {
-                        A.GenerarReporteCompleto("M_1", "Manhattan", Output);
-                        std::cout << "Resultados guardados en: " << output_file << "\n";
-                        Output.close();
-                    }
-                }
+          if (!output_file.empty()) {
+            std::ofstream out(output_file);
+            A.GenerarReporteCompleto(output_file, "Manhattan", out);
+            std::cout << "Resultados en: " << output_file << "\n";
           } else {
-            std::cout << "\nNo se encontró camino.\n";
+            A.GenerarReporteCompleto(output_file, "Manhattan", std::cout);
           }
-        break;
-      case 6:
-   if (A.BusquedaAStarDinamica()) {
-          std::cout << "OK. Revisa salida_dinamica.txt (todas las iteraciones).\n";
         } else {
-          std::cout << "Error generando la salida dinamica.\n";
+          std::cout << "No se encontró camino.\n";
         }
         break;
-      case 7:
+      
+      case 3: 
+        // A* Dinámico
+        std::cout << "\n=== BÚSQUEDA A* DINÁMICA ===\n";
+        if (A.BusquedaAStarDinamica(output_file)) {
+          std::cout << "Resultados en: " << output_file << "\n";
+        } else {
+          std::cout << "No se pudo completar la búsqueda dinámica.\n";
+        }
+        break;
+      
+      case 4: 
+        // Mostrar laberinto
+        std::cout << "\n=== LABERINTO ACTUAL ===\n";
+        std::cout << laberinto << "\n";
+        break;
+      
+      case 5:
+        std::cout << "\n=== LABERINTO DINAMICO ===\n";
+        laberinto.ActualizarDinamismo();
+        std::cout << laberinto << "\n";
+        break;
+
+      case 6: 
+        // A* Estático OCTILE
+        std::cout << "\n=== BÚSQUEDA A* ESTÁTICA ===\n";
+        if (A.BusquedaAStarH2(laberinto.coordenadas_start())) {
+          if (!output_file.empty()) {
+            std::ofstream out(output_file);
+            A.GenerarReporteCompleto(output_file, "Manhattan", out);
+            std::cout << "Resultados en: " << output_file << "\n";
+          } else {
+            A.GenerarReporteCompleto(output_file, "Manhattan", std::cout);
+          }
+        } else {
+          std::cout << "No se encontró camino.\n";
+        }
+        break;
+      
+      case 7: 
+        // A* Dinámico
+        std::cout << "\n=== BÚSQUEDA A* DINÁMICA ===\n";
+        if (A.BusquedaAStarDinamicaH2(output_file)) {
+          std::cout << "Resultados en: " << output_file << "\n";
+        } else {
+          std::cout << "No se pudo completar la búsqueda dinámica.\n";
+        }
+        break;
+      
+      case 8:
         std::cout << "\nSaliendo del programa...\n";
         break;
+        
       default:
-        std::cout << "Opción no válida. Intente de nuevo.\n";
+        std::cout << "Opción inválida.\n";
         break;
     }
-  } while (opcion != 7);
+  } while (opcion != 8);
 }

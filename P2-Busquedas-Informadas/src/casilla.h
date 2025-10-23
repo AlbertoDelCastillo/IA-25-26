@@ -7,17 +7,18 @@
   * Practica 2: Busquedas informadas
   *
   * @author Alberto Del Castillo Díaz alu0101627137@ull.edu.es
-  * @date 
-  * @brief 
-  * @version 1.0
+  * @date Oct 11 2025
+  * @brief Definición de la clase Casilla y tipos relacionados 
+  * @version 2.0
   */
 
 
 #ifndef CASILLA_H
 #define CASILLA_H
 
-#include <iostream>
-
+/**
+ * @brief Enumeración de los tipos posibles de casilla en el laberinto
+ */
 enum class Tipo_Casilla : int {
   Libre = 0,
   Obstaculo = 1,
@@ -28,8 +29,11 @@ enum class Tipo_Casilla : int {
 Tipo_Casilla FromInt(const int);
 
 /**
+ * @class Casilla
+ * @brief Representa una casilla individual del laberinto
  * 
- * 
+ * Una casilla puede ser libre, un obstáculo, el punto de entrada o la salida.
+ * Proporciona métodos para consultar su tipo y características.
  */
 class Casilla {
  public:
@@ -39,7 +43,6 @@ class Casilla {
   // Metodos auxiliares
   char ImprimirCasilla() const noexcept;
   bool EsTransitable() const noexcept;
-  // Metodos de utilidad para A*
   // Google style getters
   Tipo_Casilla tipo() const noexcept { return tipo_; }
   // Setters
